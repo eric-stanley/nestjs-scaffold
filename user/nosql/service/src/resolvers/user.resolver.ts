@@ -17,12 +17,12 @@ import { GraphQLJSON } from 'graphql-type-json';
 export class UserResolver {
   constructor(@Inject('UserService') private readonly userService: UserServiceInterface) {}
 
-  @Mutation(() => String) // Adjust return type based on your service's actual returns.
+  @Mutation(() => CreateUserDto) // Adjust return type based on your service's actual returns.
   async createUser(@Args('createUserDto') createUserDto: CreateUserDto): Promise<any> {
     return this.userService.createUser(createUserDto);
   }
 
-  @Query(() => GraphQLJSON) // Adjust return type based on your service's actual returns.
+  @Query(() => String) // Adjust return type based on your service's actual returns.
   async user(@Args('id', { type: () => ID }) id: string): Promise<any> {
     return this.userService.getUserById(id);
   }
