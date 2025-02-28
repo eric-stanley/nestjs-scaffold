@@ -1,6 +1,6 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { UserController } from '../controller/user.controller';
 import { UserSQLService } from '../service/user.sql.service';
 import { UserNoSQLService } from '../service/user.nosql.service';
@@ -18,7 +18,29 @@ import { UserResolver } from '../resolvers/user.resolver';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true, // Makes the ConfigModule available globally
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: configService.get<string>('DB_TYPE') as 'mysql' | 'postgres',
+        host: configService.get<string>('SQL_HOST'),
+        port: configService.get<number>('SQL_PORT'),
+        username: configService.get<string>('SQL_USERNAME'),
+        password: configService.get<string>('SQL_PASSWORD'),
+        database: configService.get<string>('SQL_DATABASE'),
+        entities: [SQLUser],
+        synchronize: true, // Set to false in production
+      }),
+    }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): MongooseModuleOptions => ({
+        uri: configService.get<string>('MONGO_URI'),
+        ssl: true,
+      } as MongooseModuleOptions),
+    }),
     TypeOrmModule.forFeature([SQLUser]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
